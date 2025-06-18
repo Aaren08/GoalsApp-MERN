@@ -1,4 +1,5 @@
 import asyncHandler from "express-async-handler";
+import model from "../model/goalModel.js";
 
 // Get all goals
 // @route GET /api/goals
@@ -7,13 +8,9 @@ import asyncHandler from "express-async-handler";
 // we added async to the function to handle asynchronous operations from the database or other services.
 
 const getGoals = asyncHandler(async (req, res) => {
-  res.status(200).json({
-    goals: [
-      { id: 1, text: "Learn JavaScript" },
-      { id: 2, text: "Build a web application" },
-      { id: 3, text: "Master Node.js" },
-    ],
-  });
+  const goals = await model.find();
+
+  res.status(200).json(goals);
 });
 
 // @ route POST /api/goals
@@ -25,36 +22,45 @@ const setGoal = asyncHandler(async (req, res) => {
     throw new Error("Please add a text field for the goal");
   }
 
-  const newGoal = req.body;
-  // Here you would typically save the new goal to a database
-  res.status(201).json({
-    message: "Goal created successfully",
-    goal: newGoal,
+  const goal = await model.create({
+    text: req.body.text,
   });
+
+  res.status(201).json(goal);
 });
 
 // @route PUT /api/goals/:id
 // @access Private
 
 const updateGoal = asyncHandler(async (req, res) => {
-  const goalId = req.params.id;
-  const updatedGoal = req.body;
-  // Here you would typically update the goal in a database
-  res.status(200).json({
-    message: `Goal with ID ${goalId} updated successfully`,
-    goal: updatedGoal,
+  const goal = await model.findById(req.params.id);
+
+  if (!goal) {
+    res.status(404);
+    throw new Error("Goal not found");
+  }
+
+  const updatedGoal = await model.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
   });
+
+  res.status(200).json(updatedGoal);
 });
 
 // @route DELETE /api/goals/:id
 // @access Private
 
 const deleteGoal = asyncHandler(async (req, res) => {
-  const goalId = req.params.id;
-  // Here you would typically delete the goal from a database
-  res.status(200).json({
-    message: `Goal with ID ${goalId} deleted successfully`,
-  });
+  const goal = await model.findById(req.params.id);
+
+  if (!goal) {
+    res.status(404);
+    throw new Error("Goal deletion failed: Goal not found");
+  }
+
+  const deletedGoal = await model.findByIdAndDelete(req.params.id);
+
+  res.status(200).json(deletedGoal);
 });
 
 export { getGoals, setGoal, updateGoal, deleteGoal };
