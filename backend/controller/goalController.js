@@ -8,7 +8,9 @@ import model from "../model/goalModel.js";
 // we added async to the function to handle asynchronous operations from the database or other services.
 
 const getGoals = asyncHandler(async (req, res) => {
-  const goals = await model.find();
+  const goals = await model.find({
+    user: req.user.id,
+  });
 
   res.status(200).json(goals);
 });
